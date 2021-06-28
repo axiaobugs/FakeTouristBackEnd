@@ -32,6 +32,9 @@ namespace XiechengAPI.Profiles
                    dest=>dest.Id,
                    opt=>opt.MapFrom(src=>Guid.NewGuid())
                     );
+            CreateMap<TouristRouteUpdateDto, TouristRoute>();
+           
+            CreateMap<TouristRoute, TouristRouteUpdateDto>();
         }
     }
 }

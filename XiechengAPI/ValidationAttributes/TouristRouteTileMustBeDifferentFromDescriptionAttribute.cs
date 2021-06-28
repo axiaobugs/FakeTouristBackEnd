@@ -11,7 +11,7 @@ namespace XiechengAPI.ValidationAttributes
     {
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
-            var touristRouteDto = (TouristRouteCreationDto)validationContext.ObjectInstance;
+            var touristRouteDto = (TouristRouteManipulationDto)validationContext.ObjectInstance;
             if (touristRouteDto.Title == touristRouteDto.Description)
             {
                 return new ValidationResult(
@@ -20,6 +20,5 @@ namespace XiechengAPI.ValidationAttributes
             }
             return ValidationResult.Success;
         }
-        
     }
 }

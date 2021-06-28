@@ -1,17 +1,15 @@
-using System;
-using System.Text.Encodings.Web;
-using System.Text.Unicode;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Formatters;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using XiechengAPI.Database;
-using XiechengAPI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
+using Newtonsoft.Json.Serialization;
+using XiechengAPI.Database;
+using XiechengAPI.Services;
 
 namespace XiechengAPI
 {
@@ -29,6 +27,7 @@ namespace XiechengAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers(setupAction => { setupAction.ReturnHttpNotAcceptable = true; })
+                .AddNewtonsoftJson(setupAction=>setupAction.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver())
                 .AddXmlDataContractSerializerFormatters().ConfigureApiBehaviorOptions(setupAction =>
                     setupAction.InvalidModelStateResponseFactory =
                         context =>
@@ -47,11 +46,14 @@ namespace XiechengAPI
                                 ContentTypes = {"application/problem+json"}
                             };
                         });
+
             services.AddTransient<ITouristRepository, TouristRouteRepository>();
+
             services.AddDbContext<AppDbContext>(option =>
             {
                 option.UseSqlServer(Configuration["DbContext:ConnectionString"]);
             });
+
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         }
 

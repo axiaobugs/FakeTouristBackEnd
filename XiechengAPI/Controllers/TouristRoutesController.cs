@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.AspNetCore.JsonPatch;
 using XiechengAPI.Dtos;
 using XiechengAPI.Moldes;
 using XiechengAPI.ResourceParameters;
@@ -67,6 +68,49 @@ namespace XiechengAPI.Controllers
                 "GetTouristRouteById",
                 new {touristRouteId = touristRouteToReturn.Id},
                 touristRouteToReturn);
+        }
+
+        [HttpPut("{touristRouteId}")]
+        public IActionResult UpdateTouristRoute([FromRoute] Guid touristRouteId,
+            [FromBody] TouristRouteUpdateDto touristRouteUpdateDto)
+        {
+            if (!_touristRepository.TouristRouteExists(touristRouteId))
+            {
+                return NotFound("Can't found");
+            }
+
+            var touristRouteFromRepo = _touristRepository.GetTouristRoute(touristRouteId);
+            // 1: map the touristRouteFromRepo to Dto
+            // 2: update the dto
+            // 3: map dto to touristRouteFromRepo
+            _mapper.Map(touristRouteUpdateDto, touristRouteFromRepo);
+            _touristRepository.Save();
+            return NoContent();
+        }
+
+        [HttpPatch("{touristRouteId}")]
+        public IActionResult PartiallyUpdateTouristRoute([FromRoute] Guid touristRouteId,
+            [FromBody] JsonPatchDocument<TouristRouteUpdateDto> patchDocument)
+        {
+            if (!_touristRepository.TouristRouteExists(touristRouteId))
+            {
+                return NotFound("Can't found tourist route");
+            }
+
+            var touristRouteFromRepo = _touristRepository.GetTouristRoute(touristRouteId);
+            var touristRouteUpdateToPatch = _mapper.Map<TouristRouteUpdateDto>(touristRouteFromRepo);
+            // patch to the data from repo
+            patchDocument.ApplyTo(touristRouteUpdateToPatch,ModelState);
+            // validation the dto which had patched
+            if (!TryValidateModel(touristRouteUpdateToPatch))
+            {
+                return ValidationProblem(ModelState);
+            }
+            // mapper patch to dto
+            _mapper.Map(touristRouteUpdateToPatch, touristRouteFromRepo);
+            // save data to database
+            _touristRepository.Save();
+            return NoContent();
         }
     }
 }
