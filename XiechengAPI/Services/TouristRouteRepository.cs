@@ -91,5 +91,25 @@ namespace XiechengAPI.Services
             touristRoutePicture.TouristRouteId = touristRouteId;
             _context.TouristRoutePictures.Add(touristRoutePicture);
         }
+
+        public void DeleteTouristRoute(TouristRoute touristRoute)
+        {
+            _context.TouristRoutes.Remove(touristRoute);
+        }
+
+        public void DeleteTouristRoutePicture(TouristRoutePicture touristRoutePicture)
+        {
+            _context.TouristRoutePictures.Remove(touristRoutePicture);
+        }
+
+        public IEnumerable<TouristRoute> GeTouristRouteByIdList(IEnumerable<Guid> ids)
+        {
+            return _context.TouristRoutes.Where(t => ids.Contains(t.Id)).ToList();
+        }
+
+        public void DeleteTouristRoutes(IEnumerable<TouristRoute> touristRoutes)
+        {
+            _context.TouristRoutes.RemoveRange(touristRoutes);
+        }
     }
 }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.JsonPatch;
 using XiechengAPI.Dtos;
+using XiechengAPI.Helper;
 using XiechengAPI.Moldes;
 using XiechengAPI.ResourceParameters;
 using XiechengAPI.Services;
@@ -112,5 +113,35 @@ namespace XiechengAPI.Controllers
             _touristRepository.Save();
             return NoContent();
         }
+
+        [HttpDelete("{touristRouteId}")]
+        public IActionResult DeleteTouristRoute([FromRoute] Guid touristRouteId)
+        {
+            if (!_touristRepository.TouristRouteExists(touristRouteId))
+            {
+                return NotFound("Can't found tourist route");
+            }
+
+            var touristRouteFromRepo = _touristRepository.GetTouristRoute(touristRouteId);
+            _touristRepository.DeleteTouristRoute(touristRouteFromRepo);
+            _touristRepository.Save();
+            return NoContent();
+        }
+
+        [HttpDelete("({touristRouteIds})")]
+        public IActionResult DeleteByIds([ModelBinder(BinderType = typeof(ArrayModelBinder))] [FromRoute]
+            IEnumerable<Guid> touristRouteIds)
+        {
+            if (touristRouteIds == null)
+            {
+                return BadRequest();
+            }
+
+            var touristRoutesFromRepo = _touristRepository.GeTouristRouteByIdList(touristRouteIds);
+            _touristRepository.DeleteTouristRoutes(touristRoutesFromRepo);
+            _touristRepository.Save();
+            return NoContent();
+        }
+
     }
 }

@@ -16,6 +16,10 @@ namespace XiechengAPI.Services
         void AddTouristRoute(TouristRoute touristRoute);
         bool Save();
         void AddTouristRoutePicture(Guid touristRouteId, TouristRoutePicture touristRoutePicture);
+        void DeleteTouristRoute(TouristRoute touristRoute);
+        void DeleteTouristRoutePicture(TouristRoutePicture touristRoutePicture);
+        IEnumerable<TouristRoute> GeTouristRouteByIdList(IEnumerable<Guid> ids);
+        void DeleteTouristRoutes(IEnumerable<TouristRoute> touristRoutes);
     }
 }
  
