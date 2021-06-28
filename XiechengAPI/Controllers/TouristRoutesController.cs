@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.JsonPatch;
 using XiechengAPI.Dtos;
 using XiechengAPI.Helper;
@@ -29,11 +30,11 @@ namespace XiechengAPI.Controllers
 
         [HttpGet]
         [HttpHead]
-        public IActionResult GetTouristRoutes(
+        public async Task<IActionResult> GetTouristRoutesAsync(
             [FromQuery] TouristRouteResourceParameters parameters)
         {
 
-            var touristRouteFromRepo = _touristRepository.GetTouristRoutes(parameters.Keyword, parameters.RatingOperator, parameters.RatingValue);
+            var touristRouteFromRepo =await _touristRepository.GetTouristRoutesAsync(parameters.Keyword, parameters.RatingOperator, parameters.RatingValue);
             if (touristRouteFromRepo == null || !touristRouteFromRepo.Any())
             {
                 return NotFound("No tourist route found");
@@ -45,9 +46,9 @@ namespace XiechengAPI.Controllers
 
         // api/touristRoutes/{touristRouteId}
         [HttpGet("{touristRouteId}",Name = "GetTouristRouteById")]
-        public IActionResult GetTouristRouteById(Guid touristRouteId)
+        public async Task<IActionResult> GetTouristRouteByIdAsync(Guid touristRouteId)
         {
-            var touristRouteFromRepo = _touristRepository.GetTouristRoute(touristRouteId);
+            var touristRouteFromRepo =await _touristRepository.GetTouristRouteAsync(touristRouteId);
             
             if (touristRouteFromRepo == null)
             {
@@ -59,11 +60,11 @@ namespace XiechengAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateTouristRoute([FromBody] TouristRouteCreationDto touristRouteCreationDto)
+        public async Task<IActionResult> CreateTouristRouteAsync([FromBody] TouristRouteCreationDto touristRouteCreationDto)
         {
             var touristRouteModel = _mapper.Map<TouristRoute>(touristRouteCreationDto);
             _touristRepository.AddTouristRoute(touristRouteModel);
-            _touristRepository.Save();
+            await _touristRepository.SaveAsync();
             var touristRouteToReturn = _mapper.Map<TouristRouteDto>(touristRouteModel);
             return CreatedAtRoute(
                 "GetTouristRouteById",
@@ -72,33 +73,33 @@ namespace XiechengAPI.Controllers
         }
 
         [HttpPut("{touristRouteId}")]
-        public IActionResult UpdateTouristRoute([FromRoute] Guid touristRouteId,
+        public async Task<IActionResult> UpdateTouristRouteAsync([FromRoute] Guid touristRouteId,
             [FromBody] TouristRouteUpdateDto touristRouteUpdateDto)
         {
-            if (!_touristRepository.TouristRouteExists(touristRouteId))
+            if (!(await _touristRepository.TouristRouteExistsAsync(touristRouteId)))
             {
                 return NotFound("Can't found");
             }
 
-            var touristRouteFromRepo = _touristRepository.GetTouristRoute(touristRouteId);
+            var touristRouteFromRepo =await _touristRepository.GetTouristRouteAsync(touristRouteId);
             // 1: map the touristRouteFromRepo to Dto
             // 2: update the dto
             // 3: map dto to touristRouteFromRepo
             _mapper.Map(touristRouteUpdateDto, touristRouteFromRepo);
-            _touristRepository.Save();
+            await _touristRepository.SaveAsync();
             return NoContent();
         }
 
         [HttpPatch("{touristRouteId}")]
-        public IActionResult PartiallyUpdateTouristRoute([FromRoute] Guid touristRouteId,
+        public async Task<IActionResult> PartiallyUpdateTouristRouteAsync([FromRoute] Guid touristRouteId,
             [FromBody] JsonPatchDocument<TouristRouteUpdateDto> patchDocument)
         {
-            if (!_touristRepository.TouristRouteExists(touristRouteId))
+            if (!(await _touristRepository.TouristRouteExistsAsync(touristRouteId)))
             {
                 return NotFound("Can't found tourist route");
             }
 
-            var touristRouteFromRepo = _touristRepository.GetTouristRoute(touristRouteId);
+            var touristRouteFromRepo =await _touristRepository.GetTouristRouteAsync(touristRouteId);
             var touristRouteUpdateToPatch = _mapper.Map<TouristRouteUpdateDto>(touristRouteFromRepo);
             // patch to the data from repo
             patchDocument.ApplyTo(touristRouteUpdateToPatch,ModelState);
@@ -110,26 +111,26 @@ namespace XiechengAPI.Controllers
             // mapper patch to dto
             _mapper.Map(touristRouteUpdateToPatch, touristRouteFromRepo);
             // save data to database
-            _touristRepository.Save();
+            await _touristRepository.SaveAsync();
             return NoContent();
         }
 
         [HttpDelete("{touristRouteId}")]
-        public IActionResult DeleteTouristRoute([FromRoute] Guid touristRouteId)
+        public async Task<IActionResult> DeleteTouristRouteAsync([FromRoute] Guid touristRouteId)
         {
-            if (!_touristRepository.TouristRouteExists(touristRouteId))
+            if (!(await _touristRepository.TouristRouteExistsAsync(touristRouteId)))
             {
                 return NotFound("Can't found tourist route");
             }
 
-            var touristRouteFromRepo = _touristRepository.GetTouristRoute(touristRouteId);
+            var touristRouteFromRepo =await _touristRepository.GetTouristRouteAsync(touristRouteId);
             _touristRepository.DeleteTouristRoute(touristRouteFromRepo);
-            _touristRepository.Save();
+            await _touristRepository.SaveAsync();
             return NoContent();
         }
 
         [HttpDelete("({touristRouteIds})")]
-        public IActionResult DeleteByIds([ModelBinder(BinderType = typeof(ArrayModelBinder))] [FromRoute]
+        public async Task<IActionResult> DeleteByIdsAsync([ModelBinder(BinderType = typeof(ArrayModelBinder))] [FromRoute]
             IEnumerable<Guid> touristRouteIds)
         {
             if (touristRouteIds == null)
@@ -137,9 +138,9 @@ namespace XiechengAPI.Controllers
                 return BadRequest();
             }
 
-            var touristRoutesFromRepo = _touristRepository.GeTouristRouteByIdList(touristRouteIds);
+            var touristRoutesFromRepo =await _touristRepository.GeTouristRouteByIdListAsync(touristRouteIds);
             _touristRepository.DeleteTouristRoutes(touristRoutesFromRepo);
-            _touristRepository.Save();
+            await _touristRepository.SaveAsync();
             return NoContent();
         }
 
