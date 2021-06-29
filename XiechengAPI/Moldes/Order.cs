@@ -1,9 +1,7 @@
-﻿using System;
+﻿using Stateless;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using Stateless;
 
 namespace XiechengAPI.Moldes
 {
@@ -39,6 +37,7 @@ namespace XiechengAPI.Moldes
         public ApplicationUser User { get; set; }
         public ICollection<LineItem> OrderItems { get; set; }
         public OrderStateEnum State { get; set; }
+        // ReSharper disable once InconsistentNaming
         public DateTime CreateDateUTC { get; set; }
         public string TransactionMetadata { get; set; }
         StateMachine<OrderStateEnum, OrderStateTriggerEnum> _machine;

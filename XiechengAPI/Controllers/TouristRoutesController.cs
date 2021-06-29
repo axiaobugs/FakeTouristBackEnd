@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using XiechengAPI.Dtos;
 using XiechengAPI.Helper;
@@ -35,7 +34,13 @@ namespace XiechengAPI.Controllers
             [FromQuery] TouristRouteResourceParameters parameters)
         {
 
-            var touristRouteFromRepo =await _touristRepository.GetTouristRoutesAsync(parameters.Keyword, parameters.RatingOperator, parameters.RatingValue);
+            var touristRouteFromRepo =await _touristRepository
+                .GetTouristRoutesAsync(
+                    parameters.Keyword, 
+                    parameters.RatingOperator, 
+                    parameters.RatingValue,
+                    parameters.PageSize,
+                    parameters.PageNumber);
             if (touristRouteFromRepo == null || !touristRouteFromRepo.Any())
             {
                 return NotFound("No tourist route found");
@@ -61,8 +66,6 @@ namespace XiechengAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize(AuthenticationSchemes = "Bearer")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateTouristRouteAsync([FromBody] TouristRouteCreationDto touristRouteCreationDto)
         {
             var touristRouteModel = _mapper.Map<TouristRoute>(touristRouteCreationDto);
@@ -76,8 +79,6 @@ namespace XiechengAPI.Controllers
         }
 
         [HttpPut("{touristRouteId}")]
-        [Authorize(AuthenticationSchemes = "Bearer")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateTouristRouteAsync([FromRoute] Guid touristRouteId,
             [FromBody] TouristRouteUpdateDto touristRouteUpdateDto)
         {
@@ -95,8 +96,6 @@ namespace XiechengAPI.Controllers
             return NoContent();
         }
 
-        [Authorize(AuthenticationSchemes = "Bearer")]
-        [Authorize(Roles = "Admin")]
         [HttpPatch("{touristRouteId}")]
         public async Task<IActionResult> PartiallyUpdateTouristRouteAsync([FromRoute] Guid touristRouteId,
             [FromBody] JsonPatchDocument<TouristRouteUpdateDto> patchDocument)
@@ -123,8 +122,6 @@ namespace XiechengAPI.Controllers
         }
 
         [HttpDelete("{touristRouteId}")]
-        [Authorize(AuthenticationSchemes = "Bearer")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteTouristRouteAsync([FromRoute] Guid touristRouteId)
         {
             if (!(await _touristRepository.TouristRouteExistsAsync(touristRouteId)))
@@ -139,20 +136,20 @@ namespace XiechengAPI.Controllers
         }
 
         [HttpDelete("({touristRouteIds})")]
-        [Authorize(AuthenticationSchemes = "Bearer")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteByIdsAsync([ModelBinder(BinderType = typeof(ArrayModelBinder))] [FromRoute]
             IEnumerable<Guid> touristRouteIds)
         {
+            
             if (touristRouteIds == null)
             {
                 return BadRequest();
             }
-
+            
             var touristRoutesFromRepo =await _touristRepository.GeTouristRouteByIdListAsync(touristRouteIds);
             _touristRepository.DeleteTouristRoutes(touristRoutesFromRepo);
             await _touristRepository.SaveAsync();
             return NoContent();
+
         }
 
     }

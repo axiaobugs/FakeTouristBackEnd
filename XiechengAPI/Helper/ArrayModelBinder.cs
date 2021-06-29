@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using AutoMapper.Execution;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace XiechengAPI.Helper
 {
@@ -33,8 +31,8 @@ namespace XiechengAPI.Helper
             // The value isn't null or whitespace
             // and the type of the model id enumerable
             // Get the enumerable's type and a converter
-            var elemenType = bindingContext.ModelType.GetTypeInfo().GenericTypeArguments[0];
-            var converter = TypeDescriptor.GetConverter(elemenType);
+            var elementType = bindingContext.ModelType.GetTypeInfo().GenericTypeArguments[0];
+            var converter = TypeDescriptor.GetConverter(elementType);
 
             // Create each item in the value list to the enumerable type
             var values = value.Split(new []{","},StringSplitOptions.RemoveEmptyEntries)
@@ -42,7 +40,7 @@ namespace XiechengAPI.Helper
                 .ToArray();
 
             // Create an array of that type, and set it as the model value
-            var typeValues = Array.CreateInstance(elemenType, values.Length);
+            var typeValues = Array.CreateInstance(elementType, values.Length);
             values.CopyTo(typeValues,0);
             bindingContext.Model = typeValues;
 

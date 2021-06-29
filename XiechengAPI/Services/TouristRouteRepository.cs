@@ -18,7 +18,12 @@ namespace XiechengAPI.Services
         }
 
 
-        public async Task<IEnumerable<TouristRoute>> GetTouristRoutesAsync(string keyword,string ratingOperator,int? ratingValue)
+        public async Task<IEnumerable<TouristRoute>> GetTouristRoutesAsync(
+            string keyword,
+            string ratingOperator,
+            int? ratingValue,
+            int pageSize,
+            int pageNumber)
         {
             IQueryable<TouristRoute> result = _context
                 .TouristRoutes
@@ -38,6 +43,12 @@ namespace XiechengAPI.Services
                     _ => result.Where(t => t.Rating == ratingValue),
                 };
             }
+            // pagination
+            // skip
+            var skip = (pageNumber - 1) * pageSize;
+            result = result.Skip(skip);
+            // Display a certain amount of data in page-size
+            result = result.Take(pageSize);
             return await result.ToListAsync();
         }
 
