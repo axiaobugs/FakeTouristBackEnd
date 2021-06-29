@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 using XiechengAPI.Dtos;
 using XiechengAPI.Helper;
 using XiechengAPI.Moldes;
@@ -19,16 +21,52 @@ namespace XiechengAPI.Controllers
     {
         private readonly ITouristRepository _touristRepository;
         private readonly IMapper _mapper;
+        private readonly IUrlHelper _urlHelper;
 
         public TouristRoutesController(
             ITouristRepository touristRepository,
-            IMapper mapper)
+            IMapper mapper, IUrlHelperFactory urlHelperFactory,
+            IActionContextAccessor actionContextAccessor)
         {
             _touristRepository = touristRepository;
             _mapper = mapper;
+            _urlHelper = urlHelperFactory.GetUrlHelper(actionContextAccessor.ActionContext);
         }
 
-        [HttpGet]
+        private string GenerateTouristRouteResourceURL(
+            TouristRouteResourceParameters parameters,
+            PaginationResourceParameters parameters2,
+            ResourceUriType type)
+        {
+            return type switch
+            {
+                ResourceUriType.PreviousPage => _urlHelper.Link("GetTouristRoutesAsync",
+                    new
+                    {
+                        keyword = parameters.Keyword,
+                        rating = parameters.Rating,
+                        PageNumber = parameters2.PageNumber - 1,
+                        PageSize = parameters2.PageSize
+                    }),
+                ResourceUriType.NextPage => _urlHelper.Link("GetTouristRoutesAsync",
+                    new
+                    {
+                        keyword = parameters.Keyword,
+                        rating = parameters.Rating,
+                        pageNumber = parameters2.PageNumber + 1,
+                        pageSize = parameters2.PageSize
+                    }),
+                _ => _urlHelper.Link("GetTouristRoutesAsync",new
+                {
+                    keyword = parameters.Keyword,
+                    rating = parameters.Rating,
+                    pageNumber = parameters2.PageNumber,
+                    pageSize = parameters2.PageSize
+                })
+            };
+        }
+
+        [HttpGet(Name = "GetTouristRoutesAsync")]
         [HttpHead]
         public async Task<IActionResult> GetTouristRoutesAsync(
             [FromQuery] TouristRouteResourceParameters parameters,
@@ -48,6 +86,28 @@ namespace XiechengAPI.Controllers
             }
 
             var touristRouteDto = _mapper.Map<IEnumerable<TouristRouteDto>>(touristRouteFromRepo);
+
+            var previousPageLink = touristRouteFromRepo.HasPrevious
+                ? GenerateTouristRouteResourceURL(parameters, parameters2, ResourceUriType.PreviousPage)
+                : null;
+
+            var nextPageLink = touristRouteFromRepo.HasNext
+                ? GenerateTouristRouteResourceURL(parameters, parameters2, ResourceUriType.NextPage)
+                : null;
+
+            // x-pagination
+            var paginationMetedata = new
+            {
+                previousPageLink,
+                nextPageLink,
+                totalCount = touristRouteFromRepo.TotalCount,
+                pageSize = touristRouteFromRepo.PageSize,
+                currentPage = touristRouteFromRepo.CurrentPage,
+                totalPages = touristRouteFromRepo.TotalPages
+            };
+            // add to Header
+            Response.Headers.Add("x-pagination",Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetedata));
+
             return Ok(touristRouteDto);
         }
 
