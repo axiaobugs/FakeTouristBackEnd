@@ -7,8 +7,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Serialization;
 using XiechengAPI.Database;
+using XiechengAPI.Moldes;
 using XiechengAPI.Services;
 
 namespace XiechengAPI
@@ -26,6 +31,23 @@ namespace XiechengAPI
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AppDbContext>();
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(option =>
+                {
+                    var secretByte = Encoding.UTF8.GetBytes(Configuration["Authentication:SecurityKey"]);
+                    option.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = Configuration["Authentication:Issuer"],
+                        ValidateAudience = true,
+                        ValidAudience = Configuration["Authentication:Audience"],
+                        ValidateLifetime = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(secretByte)
+                    };
+                });
+
             services.AddControllers(setupAction => { setupAction.ReturnHttpNotAcceptable = true; })
                 .AddNewtonsoftJson(setupAction=>setupAction.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver())
                 .AddXmlDataContractSerializerFormatters().ConfigureApiBehaviorOptions(setupAction =>
@@ -65,7 +87,12 @@ namespace XiechengAPI
                 app.UseDeveloperExceptionPage();
             }
 
+            // where you wanna go? 
             app.UseRouting();
+            // who you are
+            app.UseAuthentication();
+            // what you can do?
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
