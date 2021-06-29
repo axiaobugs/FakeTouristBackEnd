@@ -16,7 +16,7 @@ namespace XiechengAPI.Controllers
 {
     [ApiController]
     [Route("api/shoppingCart")]
-    public class ShoppingCartController:ControllerBase
+    public class ShoppingCartController : ControllerBase
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITouristRepository _touristRepository;
@@ -51,7 +51,7 @@ namespace XiechengAPI.Controllers
             var shoppingCartFromRepo = await _touristRepository.GetShoppingCartByUserId(userId);
             // create line item
             var touristRouteFromRepo = await _touristRepository.GetTouristRouteAsync(addShoppingCart.TouristRouteId);
-            if (touristRouteFromRepo==null)
+            if (touristRouteFromRepo == null)
             {
                 return NotFound("Not found the route in our database");
             }
@@ -73,7 +73,7 @@ namespace XiechengAPI.Controllers
         public async Task<IActionResult> DeleteShoppingCartItem([FromRoute] int itemId)
         {
             var lineItem = await _touristRepository.GetShoppingCartItemById(itemId);
-            if (lineItem==null)
+            if (lineItem == null)
             {
                 return NotFound("Route can't found in shopping cart");
             }
@@ -95,5 +95,32 @@ namespace XiechengAPI.Controllers
             await _touristRepository.SaveAsync();
             return NoContent();
         }
+
+        [HttpPost("checkout")]
+        [Authorize(AuthenticationSchemes = "Bearer")]
+        public async Task<IActionResult> Checkout()
+        {
+            // get user id
+            var userId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            // use this id get shopping cart
+            var shoppingCart = await _touristRepository.GetShoppingCartByUserId(userId);
+            // create an order
+            var order = new Order()
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                State = OrderStateEnum.Pending,
+                OrderItems = shoppingCart.ShoppingCartItems,
+                CreateDateUTC = DateTime.Now
+            };
+            // clear shoppingCart
+            shoppingCart.ShoppingCartItems = null;
+            // save to database
+            await _touristRepository.AddOrderAsync(order);
+            await _touristRepository.SaveAsync();
+            // return
+            return Ok(_mapper.Map<OrderDto>(order));
+        }
     }
+
 }
