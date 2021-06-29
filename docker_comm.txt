@@ -1,0 +1,1 @@
+docker run -e 'ACCEPT_EULA=Y' -e 'MSSQL_SA_PASSWORD=PaSSword12!' -p 1433:1433 -v /var/opt/mssql/data:/var/opt/mssql/data -v /var/opt/mssql/log:/var/opt/mssql/log -v /var/opt/mssql/secrets:/var/opt/mssql/secrets -d microsoft/mssql-server-linux
