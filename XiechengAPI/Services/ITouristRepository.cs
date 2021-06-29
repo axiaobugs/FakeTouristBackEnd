@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using XiechengAPI.Helper;
 using XiechengAPI.Moldes;
 
 namespace XiechengAPI.Services
 {
     public interface ITouristRepository
     {
-        Task<IEnumerable<TouristRoute>> GetTouristRoutesAsync(
+        Task<PaginationList<TouristRoute>> GetTouristRoutesAsync(
             string keyword,
             string ratingOperator,
             int? ratingValue,
@@ -33,7 +34,7 @@ namespace XiechengAPI.Services
         Task<IEnumerable<LineItem>> GetShoppingCartItemsByListAsync(IEnumerable<int> ids);
         void DeleteShoppingCartItems(IEnumerable<LineItem> lineItems);
         Task AddOrderAsync(Order order);
-        Task<IEnumerable<Order>> GetOrdersByUserID(string userId);
+        Task<PaginationList<Order>> GetOrdersByUserID(string userId,int pageNumber,int pageSize);
         Task<Order> GetOrderById(Guid orderId);
     }
 }

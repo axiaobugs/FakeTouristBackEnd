@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using XiechengAPI.Database;
+using XiechengAPI.Helper;
 using XiechengAPI.Moldes;
 
 namespace XiechengAPI.Services
@@ -18,7 +19,7 @@ namespace XiechengAPI.Services
         }
 
 
-        public async Task<IEnumerable<TouristRoute>> GetTouristRoutesAsync(
+        public async Task<PaginationList<TouristRoute>> GetTouristRoutesAsync(
             string keyword,
             string ratingOperator,
             int? ratingValue,
@@ -43,13 +44,7 @@ namespace XiechengAPI.Services
                     _ => result.Where(t => t.Rating == ratingValue),
                 };
             }
-            // pagination
-            // skip
-            var skip = (pageNumber - 1) * pageSize;
-            result = result.Skip(skip);
-            // Display a certain amount of data in page-size
-            result = result.Take(pageSize);
-            return await result.ToListAsync();
+            return await PaginationList<TouristRoute>.CreateAsync(pageNumber,pageSize,result);
         }
 
         public async Task<TouristRoute> GetTouristRouteAsync(Guid touristRouteId)
@@ -170,9 +165,10 @@ namespace XiechengAPI.Services
             await _context.Orders.AddAsync(order);
         }
 
-        public async Task<IEnumerable<Order>> GetOrdersByUserID(string userId)
+        public async Task<PaginationList<Order>> GetOrdersByUserID(string userId,int pageNumber,int pageSize)
         {
-            return await _context.Orders.Where(o => o.UserId == userId).ToListAsync();
+            IQueryable<Order> result = _context.Orders.Where(o => o.UserId == userId);
+            return await PaginationList<Order>.CreateAsync(pageNumber, pageSize, result);
         }
 
         public async Task<Order> GetOrderById(Guid orderId)

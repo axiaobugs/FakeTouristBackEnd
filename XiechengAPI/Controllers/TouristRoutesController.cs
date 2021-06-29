@@ -31,7 +31,8 @@ namespace XiechengAPI.Controllers
         [HttpGet]
         [HttpHead]
         public async Task<IActionResult> GetTouristRoutesAsync(
-            [FromQuery] TouristRouteResourceParameters parameters)
+            [FromQuery] TouristRouteResourceParameters parameters,
+            [FromQuery] PaginationResourceParameters parameters2)
         {
 
             var touristRouteFromRepo =await _touristRepository
@@ -39,8 +40,8 @@ namespace XiechengAPI.Controllers
                     parameters.Keyword, 
                     parameters.RatingOperator, 
                     parameters.RatingValue,
-                    parameters.PageSize,
-                    parameters.PageNumber);
+                    parameters2.PageSize,
+                    parameters2.PageNumber);
             if (touristRouteFromRepo == null || !touristRouteFromRepo.Any())
             {
                 return NotFound("No tourist route found");

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using XiechengAPI.Dtos;
+using XiechengAPI.ResourceParameters;
 using XiechengAPI.Services;
 
 namespace XiechengAPI.Controllers
@@ -30,12 +31,12 @@ namespace XiechengAPI.Controllers
 
         [HttpGet]
         [Authorize(AuthenticationSchemes = "Bearer")]
-        public async Task<IActionResult> GetOrders()
+        public async Task<IActionResult> GetOrders([FromQuery] PaginationResourceParameters parameters)
         {
             // get user
             var userId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
             // get order
-            var orders =await _touristRepository.GetOrdersByUserID(userId);
+            var orders =await _touristRepository.GetOrdersByUserID(userId,parameters.PageNumber,parameters.PageSize);
             // return
             return Ok(_mapper.Map<IEnumerable<OrderDto>>(orders));
         }
