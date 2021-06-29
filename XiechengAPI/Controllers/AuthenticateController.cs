@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using XiechengAPI.Dtos;
 using XiechengAPI.Moldes;
+using XiechengAPI.Services;
 
 namespace XiechengAPI.Controllers
 {
@@ -22,15 +23,18 @@ namespace XiechengAPI.Controllers
         private readonly IConfiguration _configuration;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ITouristRepository _touristRepository;
 
         public AuthenticateController(
             IConfiguration configuration,
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            ITouristRepository touristRepository)
         {
             _configuration = configuration;
             _userManager = userManager;
             _signInManager = signInManager;
+            _touristRepository = touristRepository;
         }
 
         [AllowAnonymous]
@@ -102,6 +106,14 @@ namespace XiechengAPI.Controllers
             {
                 return BadRequest();
             }
+            // initial shoppingcart
+            var shoppingcart = new ShoppingCart()
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id
+            };
+            await _touristRepository.CreateShoppingCart(shoppingcart);
+            await _touristRepository.SaveAsync();
             // return
             return Ok();
         }
